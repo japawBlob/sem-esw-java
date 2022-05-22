@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "cz.cvut.fel.esw.server.proto";
+
+message Request {
+  message GetCount {};
+  message PostWords {
+    bytes data = 1;
+  }
+  oneof msg {
+    GetCount getCount = 1;
+    PostWords postWords = 2;
+  }
+}
+
+message Response {
+  enum Status { OK = 0; ERROR = 1;};
+
+  Status status = 1; // Always present
+  int32 counter = 2;
+  string errMsg = 3;
+}
