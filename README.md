@@ -1,6 +1,7 @@
 ### Java server 
 
-Server based on concurrent hash map and per connection thread. 
+Server based on concurrent hash map and per connection thread.
+<br/> Prerequisites are JavaVM 17, Maven 3.8.5 and current version of protobuf: https://github.com/protocolbuffers/protobuf
 
 For running use following commands:
  
