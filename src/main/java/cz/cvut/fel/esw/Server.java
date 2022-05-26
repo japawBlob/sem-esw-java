@@ -8,12 +8,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Server implements Runnable {
     private final int port;
-    private Set<String> stringDatabase;
+    private final Set<String> stringDatabase;
     private final ServerSocket serverSocket;
 
     public Server(int port) {
         this.port = port;
-        this.stringDatabase = ConcurrentHashMap.newKeySet(5_000_000);
+        this.stringDatabase = ConcurrentHashMap.newKeySet(Utils.INITIAL_DATABASE_CAPACITY);
         this.serverSocket = this.openServerSocket(port);
     }
 

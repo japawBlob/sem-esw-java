@@ -2,6 +2,7 @@ package cz.cvut.fel.esw;
 
 public class Utils {
     public static final int MESSAGE_LENGTH = 4;
+    public static final int INITIAL_DATABASE_CAPACITY = 5_000_000;
     public static boolean isPort(String arg) {
         int i;
         try {

@@ -1,14 +1,13 @@
 package cz.cvut.fel.esw;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import cz.cvut.fel.esw.proto.*;
@@ -69,8 +68,14 @@ public class ConnectionHandler implements Runnable {
     }
 
     private int getMessageSize(InputStream inputStream) throws IOException {
-        byte sizeBytes [] = new byte [Utils.MESSAGE_LENGTH];
-        inputStream.read(sizeBytes, 0, Utils.MESSAGE_LENGTH);
+        byte[] sizeBytes = new byte [Utils.MESSAGE_LENGTH];
+        int connection_terminated = inputStream.read();
+        if (connection_terminated == -1){
+            return -1;
+        }
+        if (inputStream.read(sizeBytes, 1, Utils.MESSAGE_LENGTH-1) != Utils.MESSAGE_LENGTH-1){
+            return -1;
+        }
         return Utils.arrToInt(sizeBytes);
     }
 
@@ -86,21 +91,30 @@ public class ConnectionHandler implements Runnable {
         }
         return messageBody;
     }
-    private void handleGetCount(OutputStream os) throws IOException {
+    private void handleGetCount(OutputStream outputStream) throws IOException {
         Response response = Response.newBuilder()
                 .setCounter(this.stringDatabase.size())
                 .setStatus(Response.Status.OK)
                 .build();
         int sizeInt = response.getSerializedSize();
         byte[] sizeBytes = ByteBuffer.allocate(Utils.MESSAGE_LENGTH).putInt(sizeInt).array();
-        os.write(sizeBytes);
-        response.writeTo(os);
+        outputStream.write(sizeBytes);
+        response.writeTo(outputStream);
         this.stringDatabase.clear();
     }
 
-    private void handlePostWords(Request request, OutputStream os) throws IOException {
-        throw new EOFException ("To be implemented");
+    private void handlePostWords(Request request, OutputStream outputStream) throws IOException {
+        InputStream byteStream = new ByteArrayInputStream(request.getPostWords().getData().toByteArray());
+        byte [] input = new GZIPInputStream(byteStream).readAllBytes();
+        String words = new String(input, StandardCharsets.UTF_8);
+        this.stringDatabase.addAll(Arrays.asList(words.split("\\s+")));
+        Response response = Response.newBuilder()
+                .setStatus(Response.Status.OK)
+                .build();
+        int sizeInt = response.getSerializedSize();
+        byte[] sizeByte = ByteBuffer.allocate(Utils.MESSAGE_LENGTH).putInt(sizeInt).array();
+        outputStream.write(sizeByte);
+        response.writeTo(outputStream);
+        byteStream.close();
     }
-
-
 }
